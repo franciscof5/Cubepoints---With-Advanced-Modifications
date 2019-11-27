@@ -12,7 +12,7 @@ function cp_ready(){
 function cp_currentUser() {
 	require_once(ABSPATH . WPINC . '/pluggable.php');
 	global $current_user;
-	get_currentuserinfo();
+	wp_get_current_user();
 	return $current_user->ID;
 }
  
@@ -72,6 +72,7 @@ function cp_displayPoints($uid = 0, $return = 0, $format = 1) {
 function cp_getAllPoints($amt=0,$filter_users=array(),$start=0){
 	global $wpdb;
 	if($amt>0){ $limit = ' LIMIT ' . $start.','.$amt; }
+  $extraquery = '';
 	if (count($filter_users)>0){
 		$extraquery = ' WHERE '.$wpdb->base_prefix.'users.user_login != \'';
 		$extraquery .= implode("' AND ".$wpdb->base_prefix."users.user_login != '",$filter_users);
@@ -115,25 +116,6 @@ function cp_points_set($type, $uid, $points, $data){
 	$difference = $points - cp_getPoints($uid);
 	cp_updatePoints($uid, $points);
 	cp_log($type, $uid, $difference, $data);
-}
-
-/** Get difference in time */
-function cp_relativeTime($timestamp){
-	$difference = time() - $timestamp;
-	$periods = array(__('sec','cp'), __('min','cp'), __('hour','cp'), __('day','cp'), __('week','cp'), __('month','cp'), __('year','cp'), __('decade','cp'));
-	$lengths = array("60","60","24","7","4.35","12","10");
-	if ($difference >= 0) { // this was in the past
-		$ending = __('ago','cp');
-	} else { // this was in the future
-		$difference = -$difference;
-		$ending = __('to go','cp');
-	}		
-	for($j = 0; $difference >= $lengths[$j]; $j++)
-		$difference /= $lengths[$j];
-	$difference = round($difference);
-	if($difference != 1) $periods[$j].= 's';
-	$text = "$difference $periods[$j] $ending";
-	return $text;
 }
 
 /** Get total number of posts */
@@ -199,6 +181,25 @@ function cp_modules_include(){
 	foreach (glob(ABSPATH.PLUGINDIR.'/'.dirname(plugin_basename(__FILE__))."/modules/*/*.php") as $filename){
 		require_once($filename);
 	}
+}
+
+/** Function to cache module versions and run activation hook on module update */
+function cp_modules_updateCheck(){
+	global $cp_module;
+	$module_ver_cache = unserialize(get_option('cp_moduleVersions'));
+	$module_ver = array();
+	foreach($cp_module as $mod){
+		$module_ver[$mod['id']] = $mod['version'];
+		// check for change in version and run module activation hook
+		if(cp_module_activated($mod['id'])){
+			if($module_ver_cache[$mod['id']] != $mod['version']){
+				if(!did_action('cp_module_'.$mod['id'].'_activate')){
+					do_action('cp_module_'.$mod['id'].'_activate');
+				}
+			}
+		}
+	}
+	update_option('cp_moduleVersions', serialize($module_ver));
 }
 
 

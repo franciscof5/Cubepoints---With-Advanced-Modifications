@@ -2,7 +2,7 @@
 
 /** Notify Module */
 
-cp_module_register(__('Notify', 'cp') , 'notify' , '1.0', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('After activating this module, a growl-like pop up will appear to your users each time they earn points.', 'cp'), 1);
+cp_module_register(__('Notify', 'cp') , 'notify' , '1.1', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('After activating this module, a growl-like pop up will appear to your users each time they earn points.', 'cp'), 1);
 
 function cp_module_notify_install(){
 	global $wpdb;
@@ -16,7 +16,6 @@ function cp_module_notify_install(){
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 		add_option("cp_module_notify_db_version'", "1.0");
-		add_option("cp_module_notify_header", "CubePoints Notice");
 	}
 }
 add_action('cp_module_notify_activate','cp_module_notify_install');
@@ -31,16 +30,18 @@ if(cp_module_activated('notify')){
 	/**********************
 	 * Enqueuing Scripts
 	 ***********************/
-	wp_register_script(
-		'jQuery_notice',
-		WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__)). 'jquery.notice.js',
-		array('jquery'),
-		'1.0.1'
-	);
-	wp_register_style(
-		'jQuery_notice',
-		WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__)). 'jquery.notice.css'
-	);
+	add_action("wp_enqueue_script", function() {
+		wp_register_script(
+			'jQuery_notice',
+			WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__)). 'jquery.notice.js',
+			array('jquery'),
+			'1.0.1'
+		);
+		wp_register_style(
+			'jQuery_notice',
+			WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__)). 'jquery.notice.css'
+		);
+	});
 	
 	function cp_notify_script(){ 
 		wp_enqueue_script('jquery');
@@ -54,45 +55,20 @@ if(cp_module_activated('notify')){
 	add_action('init', 'cp_notify_style');
 	/************************
 	 * Enqueue End
-	 ************************/
-	 
-	/**********************
-	 * Config
-	 ***********************/
-	function cp_module_notify_config(){
-	?>
-		<br />
-		<h3><?php _e('Notify','cp'); ?></h3>
-		<table class="form-table">
-			<tr valign="top">
-				<th scope="row"><label for="cp_module_notify_header"><?php _e('Notify Header', 'cp'); ?>:</label></th>
-				<td valign="middle"><input type="text" id="cp_module_notify_header" name="cp_module_notify_header" value="<?php echo get_option('cp_module_notify_header'); ?>" size="30" /></td>
-			</tr>
-		</table>
-	<?php
-	}
-	add_action('cp_config_form','cp_module_notify_config');
-	
-	function cp_module_notify_config_process(){
-		$cp_module_notify_header = $_POST['cp_module_notify_header'];
-		update_option('cp_module_notify_header', $cp_module_notify_header);
-	}
-	add_action('cp_config_process','cp_module_notify_config_process');
-	/**********************
-	 * Config End
-	 ***********************/
-	 
+	 ************************/	 
 
 	add_action('wp_footer', 'cp_module_notify_display_hook', 10, 1);	
 	function cp_module_notify_display($text = ''){
 		if($text==''){ return; }
-		$header = get_option('cp_module_notify_header');
 
-		echo '<script>jQuery.noticeAdd({';			
-			echo ' text: "';
-			if($header != '') echo '<span class=\'notice-header\'>'.$header.'</span>'; echo $text; echo '",';
-			echo 'stay: false';
-		echo '});</script>';
+		echo '<script>';
+			echo 'jQuery.noticeAdd({';			
+				echo ' text: "';
+				echo $text;
+				echo '",';
+				echo 'stay: false';
+			echo '});';
+		echo '</script>';
 	}
 	function cp_module_notify_hook(){
 		$notices = apply_filters('cp_module_notify', array());
@@ -142,29 +118,14 @@ if(cp_module_activated('notify')){
 	add_action('cp_log','cp_module_notify_logsHook',10,4);
 	function cp_module_notify_logsHook($type, $uid, $points, $data){
 		if($points>0){
-			$m= __('You have just earned %points%...', 'cp');
+			$m= '+%npoints%';
 		} else {
-			$m=__('You have just lost %points%...', 'cp');
+			$m='-%npoints%';
 		}
 		$m = apply_filters('cp_module_notify_msg',array($m, $type, $uid, $points, $data));
 		$message = $m[0];
 		cp_module_notify_queue(array( $uid, $message ));
 	}
-	
-	/** Messages for common log items */
-	function cp_module_notify_msg_common($d){
-		list($m, $type, $uid, $points, $data) = $d;
-		switch ($type) {
-			case 'comment':
-				$m = __('You have earned %points% for posting a comment...', 'cp');
-				break;
-			case 'post':
-				$m = __('You have earned %points% for making a post...', 'cp');
-				break;
-		}
-		return array($m, $type, $uid, $points, $data);
-	}
-	add_filter('cp_module_notify_msg','cp_module_notify_msg_common',1);
 	
 }
 ?>

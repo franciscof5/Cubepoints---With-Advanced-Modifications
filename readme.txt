@@ -1,20 +1,23 @@
 === Plugin Name ===
 Contributors: lauweijie7715, petester
 Donate link: http://cubepoints.com/donate/
-Tags: points, comments, post, admin, widget
+Tags: points, comments, post, admin, widget, sidebar, paypal, gamification, rewards
 Requires at least: 2.2
-Tested up to: 3.1.2
-Stable tag: 3.0.3
+Tested up to: 3.4.2
+Stable tag: 3.2.1
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-CubePoints is a point management system designed for WordPress blogs.
+CubePoints is a point management system for WordPress.
 
 == Description ==
 
-CubePoints is a point management system designed for WordPress blogs. Users can earn points by posting comments creating posts, or even by logging in on your site.
+CubePoints is a point management system for sites running on WordPress. Users can earn virtual credits on your site by posting comments, creating posts, or even by logging in each day! Install CubePoints and watch your visitor interaction soar by offering them points which could be used to view certain posts, exchange for downloads or even real items!
 
-Encourage your users to comment on your posts by offering them points which could be used to purchase items / upgrades / etc. Users will be awarded a certain number of points for each comment they make.
+CubePoints is modular! And this means that it can be easily extended to offer more ways for your users to earn and spend points. APIs are also available for other plugins to work with CubePoints.
 
-A lot of API is available for other plugins/systems to work with CubePoints. For more information, consult the documentation.
+> #### CubePoints Support Forum
+> Please visit the [CubePoints Support Forum](http://cubepoints.com/forums) for additional help with using this plugin. You may also post feature requests, ideas and bug reports there.
 
 == Installation ==
 
@@ -31,7 +34,7 @@ For advanced configurations and integration with themes and other plugins, you m
 
 = Where can I find additional help and support for this plugin? =
 
-You may visit the CubePoints Forum (http://cubepoints.com/forums/) for additional community help and support.
+You may visit the [CubePoints Forum](http://cubepoints.com/forums/) for additional community help and support.
 
 = How do I activate other features? =
 
@@ -45,6 +48,18 @@ Additional features can be activated from the modules page.
 4. Advanced widget configurations
 
 == Upgrade Notice ==
+
+= 3.2.1 =
+Hotfix for version 3.2. Fixes the broken "Donate" module and adds the "Limit Comment Points" that was missing from version 3.2.
+
+= 3.2 =
+New "Limit Comment Points" module added. "Donate" module updated. Several bugfixes to the "PayPal Top-up" module, "Custom Points" module and CubePoints core.
+
+= 3.1.1 =
+Translations for 11 locales added. Problems with RTL support, "PayPal Top-up" module & "Comment Spam Control" module fixed.
+
+= 3.1 =
+New features and modules added. Several bugs fixed as well.
 
 = 3.0.3 =
 New module (YouTube Video) added. Minor bugfixes made and improved code for XHTML validation.
@@ -74,6 +89,36 @@ Daily Points and "My Points" page are now added in this version, as well as a lo
 Many bugs found in previous versions are now fixed in this version, including performance issues, donation problems, etc. Ranks are also added.
 
 == Changelog ==
+
+**Version 3.2.1** *(November 17th, 2012)*
+
++ [Bugfix] Fixes the broken "Donate" module in version 3.2 due to missing files
++ [Feature] "Limit Comment Points" module that was left out in version 3.2 added
+
+**Version 3.2** *(November 16th, 2012)*
+
++ [Feature] New "Limit Comment Points" module added
++ [Change] Donate module updated with a new frontend interface
++ [Bugfix] Fixed a bug in the "Custom Points" module which prevented it from working
++ [Bugfix] Several bugfixes and and optimisations to the "PayPal Top-up" module
++ [Bugfix] Code that produce E_NOTICE errors fixed
++ [Bugfix] Fixes the issue where ajax requests in the admin back-end (e.g. updating points) fails to run if the administration over SSL is forced
+
+**Version 3.1.1** *(July 13th, 2012)*
+
++ [Translation] Added I18n for 11 locales: Arabic (ar), German (de_DE), Spanish (es_ES), French (fr_FR), Hungarian (hu_HU), Italian (it_IT), Polish (pl_PL), Portuguese (pt_BR), Romanian (ro_RO), Russianb (ru_RU), Ukrainian (uk)
++ [Bugfix] Fixed the issue where points do not get added after a successful payment in the "PayPal Top-up" module
++ [Bugfix] Fixed RTL Language support
++ [Bugfix] Fixed problem with the "Comment Spam Control" module
+
+**Version 3.1** *(September 29th, 2011)*
+
++ [Feature] Add points with custom log descriptions
++ [Feature] Updates to "Paid Content" module which allows page authors to earn points from users
++ [Feature] New "Backup and Restore" module added
++ [Feature] New "Reset" module added
++ [Change] Updates to the CubePoints modules system
++ [Bugfix] Fixed bug where the donate module would not work if unicode characters are entered in the message
 
 **Version 3.0.3** *(May 13th, 2011)*
 

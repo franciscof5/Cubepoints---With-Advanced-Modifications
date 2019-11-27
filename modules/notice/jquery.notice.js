@@ -63,6 +63,7 @@
 				},
 				options.stayTime);
 			}
+			
 		},
 		
 		noticeRemove: function(obj)

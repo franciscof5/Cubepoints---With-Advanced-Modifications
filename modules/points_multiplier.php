@@ -2,7 +2,7 @@
 
 /** Points Multiplier Module */
 
-cp_module_register(__('Points Multiplier', 'cp') , 'pmultiply' , '1.0', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('This module allows you to temporarily double, triple points earned by users. Useful if you wish to increase user activiy in a particular week. You may also use this module to temporarily disable points from being earned.', 'cp'), 1);
+cp_module_register(__('Points Multiplier', 'cp') , 'pmultiply' , '1.0', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('This module allows you to temporarily double, triple points earned by users. Useful if you wish to increase user activity in a particular week. You may also use this module to temporarily disable points from being earned.', 'cp'), 1);
 
 function cp_module_pmultiply_install(){
 	add_option('cp_module_pmultiply_multiplier', 2);
@@ -29,7 +29,8 @@ if(cp_module_activated('pmultiply')){
 		update_option('cp_module_pmultiply_multiplier', $cp_module_pmultiply_multiplier);
 	}
 	add_action('cp_config_process','cp_module_pmultiply_config_process');
-	
-	add_filter('cp_points',create_function('$points', 'return '.get_option('cp_module_pmultiply_multiplier').'*$points;'),10);
+	if(!isset($points))
+		$points=1;
+	add_filter('cp_points',create_function('$points', 'return '.get_option('cp_module_pmultiply_multiplier').' * $points;'),10);
 }
 ?>

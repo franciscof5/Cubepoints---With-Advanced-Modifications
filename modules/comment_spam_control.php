@@ -2,10 +2,10 @@
 
 /** Comment Spam Control Module */
 
-cp_module_register(__('Comment Spam Control', 'cp') , 'cp_csc' , '1.0', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('When enabled, this plugin would only allow users to receive points for one comment per post.', 'cp'), 1);
+cp_module_register(__('Comment Spam Control', 'cp') , 'cp_csc' , '1.1', 'CubePoints', 'http://cubepoints.com', 'http://cubepoints.com' , __('When enabled, this module would only allow users to receive points for one comment per post.', 'cp'), 1);
 
 if(cp_module_activated('cp_csc')){
-	add_action('cp_newComment', 'cp_module_csc_newComment');
+	add_action('cp_comment_add', 'cp_module_csc_newComment');
 	function cp_module_csc_newComment($cid) {
 		if (is_user_logged_in()) {
 			$cdata = get_comment($cid);

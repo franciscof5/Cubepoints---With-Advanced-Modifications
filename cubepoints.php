@@ -1,18 +1,19 @@
 <?php
 /*
-Plugin Name: CyberKarma Based On Cubepoints
-Plugin URI: http://www.healerswiki.org
-Description: CubePoints is a point management system designed for Wordpress blogs. Users can earn points by posting comments on your site. To display user's points, just put <code>&lt;?php cp_displayPoints(); ?&gt;</code> in your template or activate the sidebar widget.
-Version: 3.0.3
-Author: MarcusBS & Mahibul Hasan Sohag
-Author URI: http://www.healerswiki.org
+Plugin Name: CubePoints
+Plugin URI: http://cubepoints.com
+Description: CubePoints is a point management system for sites running on WordPress. Users can earn virtual credits on your site by posting comments, creating posts, or even by logging in each day! Install CubePoints and watch your visitor interaction soar by offering them points which could be used to view certain posts, exchange for downloads or even real items!
+Version: 3.2.1
+Author: Jonathan Lau & Peter Zhang
+Author URI: http://cubepoints.com
 */
 
 global $wpdb;
 
 /** Define constants */
-define('CP_VER', '3.0.1');
-define('CP_DB', $wpdb->base_prefix . 'cp');
+define('CP_VER', '3.2.1');
+#define('CP_DB', $wpdb->base_prefix . 'cp');
+define('CP_DB', '8fnetwork_cp');
 define('CP_PATH', WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__),"",plugin_basename(__FILE__)));
 
 /** Set CubePoints Version **/
@@ -28,7 +29,7 @@ require_once 'cp_common.php';
 require_once 'cp_install.php';
 
 /** Includes upgrade script */
- require_once 'cp_upgrade.php';
+require_once 'cp_upgrade.php';
 
 /** Includes core functions */
 require_once 'cp_core.php';
@@ -56,5 +57,8 @@ function cp_activate(){
 
 /** Include all modules in the modules folder */
 add_action('plugins_loaded','cp_modules_include',2);
+
+/** Checks if modules have been updated and run activation hook */
+add_action('init', 'cp_modules_updateCheck');
 
 ?>

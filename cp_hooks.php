@@ -9,30 +9,45 @@ function cp_admin_logs_desc_misc($type,$uid,$points,$data){
 	if($type!='misc') { return; }
 	echo $data;
 }
+
+ /** Add Points logs hook */
+add_action('cp_logs_description','cp_admin_logs_desc_addpoints', 10, 4);
+function cp_admin_logs_desc_addpoints($type,$uid,$points,$data){
+	if($type!='addpoints') { return; }
+	echo $data;
+}
  
 /** Comments hook */
 add_action('comment_post', 'cp_newComment', 10 ,2);
 function cp_newComment($cid, $status) {
-	if (is_user_logged_in()) {
-		$cdata = get_comment($cid);
-		if($status == 1){
-			do_action('cp_newComment', $cid);
-			cp_points('comment', cp_currentUser(), apply_filters('cp_comment_points',get_option('cp_comment_points')), $cid);
-		}
+	$cdata = get_comment($cid);
+	if($status == 1){
+		do_action('cp_comment_add', $cid);
+		cp_points('comment', cp_currentUser(), apply_filters('cp_comment_points',get_option('cp_comment_points')), $cid);
 	}
 }
 
-/** Comment edit status hook */
-add_action('wp_set_comment_status', 'cp_statusComment', 10, 2);
-function cp_statusComment($cid,$newstatus){
-	$cdata = get_comment($cid);
-	$approved = $cdata->comment_approved;
-	$uid = $cdata->user_id;
+/** Comment approved hook */
+add_action('comment_unapproved_to_approved', 'cp_commentApprove', 10, 1);
+add_action('comment_trash_to_approved', 'cp_commentApprove', 10, 1);
+add_action('comment_spam_to_approved', 'cp_commentApprove', 10, 1);
+function cp_commentApprove($cdata){
+	do_action('cp_comment_add', $cdata->comment_ID);
+	cp_points('comment', $cdata->user_id, apply_filters('cp_comment_points',get_option('cp_comment_points')), $cdata->comment_ID);
+}
+
+/** Comment unapproved hook */
+add_action('comment_approved_to_unapproved', 'cp_commentUnapprove', 10, 1);
+add_action('comment_approved_to_trash', 'cp_commentUnapprove', 10, 1);
+add_action('comment_approved_to_spam', 'cp_commentUnapprove', 10, 1);
+function cp_commentUnapprove($cdata){
+	// check if points were indeed awarded for this comment
 	global $wpdb;
-	if($newstatus == 'approve' && ((int) $wpdb->get_var("SELECT COUNT(*) FROM ".CP_DB." WHERE `type`='comment' AND `data`=".$cid) == 0 )){
-		do_action('cp_approvedComment', $cid);
-		cp_points('comment', $uid, apply_filters('cp_comment_points',get_option('cp_comment_points')), $cid);
+	if($wpdb->get_var('SELECT COUNT(*) FROM ' . CP_DB . ' WHERE type = \'comment\' AND data = ' . $cdata->comment_ID)==0){
+		return;
 	}
+	do_action('cp_comment_remove', $cdata->comment_ID);
+	cp_points('comment_remove', $cdata->user_id, apply_filters('cp_del_comment_points',-get_option('cp_del_comment_points')), $cdata->comment_ID);
 }
 
 /** Comments logs hook */
@@ -47,17 +62,6 @@ function cp_admin_logs_desc_comment($type,$uid,$points,$data){
 	$url = get_permalink( $pid ) . '#comment-' . $data;
 	$detail = __('Comment', 'cp').': '.cp_truncate(strip_tags($cdata->comment_content), 100, false);
 	echo '<span title="'.$detail.'">'.__('Comment on', 'cp').' &quot;<a href="'.$url.'">'.$ptitle.'</a>&quot;</span>';
-}
-
-/** Comments removal hook */
-add_action('delete_comment', 'cp_rmvComment');
-function cp_rmvComment($cid) {
-	$comment = get_comment($cid);
-	$uid = $comment->user_id;
-	global $wpdb;
-	if(((int) $wpdb->get_var("SELECT COUNT(*) FROM ".CP_DB." WHERE `type`='comment' AND `data`=".$cid) != 0 )){
-		cp_points('comment_remove', $comment->user_id, apply_filters('cp_del_comment_points',-get_option('cp_del_comment_points')), $cid);
-	}
 }
 
 /** Comments removal logs hook */
@@ -259,5 +263,84 @@ function cp_manage_form_submit() {
 	
 }
 
+/** Hook for add-points autocomplete user suggestion */
+add_action( 'wp_ajax_cp_add_points_user_suggest', 'cp_add_points_user_suggest' );
+function cp_add_points_user_suggest() {
+
+	header( "Content-Type: application/json" );
+	
+	if( ! current_user_can('manage_options') || $_REQUEST['q']=='' ){
+		$response = json_encode( array() );
+		echo $response;
+		exit;
+	}
+	
+	global $wpdb;
+	$users = $wpdb->get_results('SELECT * from `' . $wpdb->prefix . 'users` WHERE `user_login` LIKE \''.$_REQUEST['q'].'%\' LIMIT 10', ARRAY_A);
+	
+	$response = array();
+	
+	foreach($users as $user){
+		$response[] = implode("|", array($user['user_login'], $user['ID'], $user['display_name'], $user['user_email'], md5(trim(strtolower($user['user_email'])))));
+	}
+	$response = json_encode( implode("\n", $response) );
+	echo $response;
+	exit;
+	
+}
+
+/** Hook for add-points user query */
+add_action( 'wp_ajax_cp_add_points_user_query', 'cp_add_points_user_query' );
+function cp_add_points_user_query() {
+
+	header( "Content-Type: application/json" );
+	
+	if( ! current_user_can('manage_options') || $_REQUEST['q']=='' ){
+		$response = json_encode( array() );
+		echo $response;
+		exit;
+	}
+	
+	global $wpdb;
+	$user = $wpdb->get_row('SELECT * from `' . $wpdb->prefix . 'users` WHERE `user_login` LIKE \''.$wpdb->prepare(trim($_REQUEST['q'])).'\' LIMIT 1', ARRAY_A);
+	if($user['ID'] == null){
+		$response = json_encode( array() );
+		echo $response;
+		exit;
+	}
+	$response = json_encode( array(
+							'id' => $user['ID'],
+							'user_login' => $user['user_login'],
+							'display_name' => $user['display_name'],
+							'email' => $user['user_email'],
+							'points' => cp_getPoints($user['ID']),
+							'hash' => md5(trim(strtolower($user['user_email'])))
+							));
+	echo $response;
+	exit;
+	
+}
+
+/** Hook for add-points user update */
+add_action( 'wp_ajax_cp_add_points_user_update', 'cp_add_points_user_update' );
+function cp_add_points_user_update() {
+
+	header( "Content-Type: application/json" );
+	
+	if( ! current_user_can('manage_options') || $_POST['id']=='' || $_POST['points']=='' || $_POST['description']=='' ){
+		$response = json_encode( array( 'status' => 'failed' ) );
+		echo $response;
+		exit;
+	}
+	
+	cp_points('addpoints', (int)$_POST['id'], (int)$_POST['points'], htmlentities($_POST['description']));
+	$response = json_encode( array(
+							'status' => 'ok',
+							'newpoints' => cp_getPoints((int)$_POST['id'])
+							));
+	echo $response;
+	exit;
+	
+}
 
 ?>
